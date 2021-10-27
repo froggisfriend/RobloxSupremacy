@@ -235,7 +235,7 @@ setmetatable(framework, {
         elseif key == "initialize" then
             framework.menu.initialized = true
             framework.menu.cursor = self("draw", {class = "Triangle", properties = {
-                ZIndex = 999,
+                ZIndex = 2, -- shitware doesnt like it
                 Filled = true,
                 Visible = self.menu.open,
                 Transparency = 1,
