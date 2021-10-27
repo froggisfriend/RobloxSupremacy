@@ -1,15 +1,18 @@
+
 local UserInputService = game:GetService("UserInputService") -- Services
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
-
+local dropdown_open = false 
 local localPlayer = Players.LocalPlayer -- Locals
 local currentCamera = Workspace.CurrentCamera
+local GithubUser = "froggisfriend";
 
 local wrap = coroutine.wrap -- Cache
 local insert = table.insert
 local remove = table.remove
+local format = string.format
 local find = table.find
 local getMouseLocation = UserInputService.GetMouseLocation
 local HttpGet = game.HttpGet
@@ -52,8 +55,9 @@ local framework = {
         currentDropdown = nil,
         keybinds = {},
         reservedKeybinds = {
-            menuKey = Enum.KeyCode.Home,
-            panicKey = Enum.KeyCode.End
+            menuKey = Enum.KeyCode.RightShift,
+            panicKey = Enum.KeyCode.End,
+            LolNigga = Enum.KeyCode.Escape
         },
         flags = {},
         tabs = {},
@@ -248,7 +252,10 @@ setmetatable(framework, {
                 v:Disconnect()
                 framework.connections[i] = nil
             end
-
+            if _G['r_step_c'] then
+                _G['r_step_c']:disconnect()
+            end
+            
             for i,v in next, framework.menu.drawings do
                 if self("doesDrawingExist", {drawing = v[1]}) then
                     v[1]:Remove()
@@ -771,7 +778,7 @@ function framework:createWindow(args)
             }})
 
             function keybind:setKey(Input)
-                if Input and Input ~= ""  then
+                if Input and Input ~= "" and Input ~= "Escape"  then
                     local idx = find(framework.menu.accents, keybind.drawings.buttonText)
                     if idx then
                         remove(framework.menu.accents, idx)
@@ -864,17 +871,26 @@ function framework:createWindow(args)
                 Visible = tab.open,
                 Transparency = 1,
             }})
-            framework("setImage", {drawing = dropdown.drawings.triangle, url = "https://raw.githubusercontent.com/yukihooked/DATA/main/triangle2.png"})
-
+            framework("setImage", {drawing = dropdown.drawings.triangle, url = format("https://raw.githubusercontent.com/%s/DATA/main/triangle2.png",GithubUser)})
+            function dropdown:close()
+                for i,v in next, dropdown.content do
+                    v:Remove()
+                    dropdown.content[i] = nil
+                end
+                framework("setImage", {drawing = dropdown.drawings.triangle, url = format("https://raw.githubusercontent.com/%s/DATA/main/triangle2.png",GithubUser)})
+            end
             function dropdown:select(val)
                 dropdown.value = val
                 dropdown.drawings.buttonText.Text = val
+                dropdown_open = false
                 dropdown.callback(val)
+                dropdown:close()
             end
             dropdown:select(dropdown.value)
 
             function dropdown:open()
-                framework("setImage", {drawing = dropdown.drawings.triangle, url = "https://raw.githubusercontent.com/yukihooked/DATA/main/triangle2down.png"})
+
+                framework("setImage", {drawing = dropdown.drawings.triangle, url = format("https://raw.githubusercontent.com/%s/DATA/main/triangle2down.png",GithubUser)})
                 for i,v in next, dropdown.options do
                     dropdown.content[i.."Ring"] = framework("draw", {class = "Square", offset = {nVector2(0,0), dropdown.drawings.ring0}, properties = {
                         Size = framework("udim", {type = "size", xScale = 0, xOffset = 155, yScale = 0, yOffset = 20, relativeFrom = dropdown.drawings.ring0}),
@@ -907,13 +923,7 @@ function framework:createWindow(args)
                 framework("refreshCursor")
             end
 
-            function dropdown:close()
-                for i,v in next, dropdown.content do
-                    v:Remove()
-                    dropdown.content[i] = nil
-                end
-                framework("setImage", {drawing = dropdown.drawings.triangle, url = "https://raw.githubusercontent.com/yukihooked/DATA/main/triangle2.png"})
-            end
+      
 
             tab.axis[dropdown.side] += 40
 
@@ -994,7 +1004,7 @@ function framework:createWindow(args)
         if not self.menu.fading then
             if self.menu.bindingKey then
                 if Input.KeyCode.Name ~= "Unknown" and Input.KeyCode.Name:upper() or Input.UserInputType.Name:upper() then
-                    if Input.KeyCode.Name == "Delete" then
+                    if Input.KeyCode.Name == "Escape" then
                         self.menu.currentKeybind:setKey()
                         self.menu.bindingKey = false
                     else
@@ -1171,49 +1181,4 @@ function framework:createScreenLabel(args)
     insert(self.labels, screenLabel)
     return screenLabel
 end
-
-local watermark = framework:createScreenLabel{text = "YUKIHOOK | " .. os.date("%X") .. " | YUKINO"}
-local watermarkConnection = framework("createConnection", {name = "watermark", connection = RunService.Heartbeat, callback = function()
-    watermark:changeText("YUKIHOOK | " .. os.date("%X") .. " | YUKINO")
-end})
-local window = framework:createWindow{}
-local tab = window:createTab{name = "aimbot"}
-local label = tab:createLabel{text = "Soon"}
-
-local antiaim = window:createTab{name = "anti-aim"}
-local label = antiaim:createLabel{text = "textLabel"}
-local button = antiaim:createButton{text = "button", callback = function()
-    framework("changeAccent", {accent = nHSV(math.random(0, 360)/360, math.random(50,100)/100, 1)})
-end}
-
-local toggle = antiaim:createToggle{text = "toggle", side = "right", callback = function(val)
-    print(val)
-end}
-
-local slider = antiaim:createSlider{text = "slider", side = "right", min = -100, default = 0, max = 100, callback = function(val)
-    print(val)
-end}
-
-local keybind = antiaim:createKeybind{text = "keybind", side = "right", flag = "keybind", callback = function(val)
-    print('Pressed a keybind')
-end}
-
-local dropdown = antiaim:createDropdown{text = "dropdown", default = "hi Default", options = {"aaaa","bbbb", "cccc"}, callback = function(val)
-    print(val)
-end}
-
-local colorpicker = antiaim:createColorpicker{text = "colorpicker", callback = function(val)
-end}
-
-
-local players = window:createTab{name = "players"}
-local visuals = window:createTab{name = "visuals"}
-local movement = window:createTab{name = "movement"}
-local skins = window:createTab{name = "skins"}
-local misc = window:createTab{name = "misc"}
-local config = window:createTab{name = "config"}
-local lua = window:createTab{name = "lua"}
-
-
-framework("initialize")
 return framework
